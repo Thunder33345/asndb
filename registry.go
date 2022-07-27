@@ -15,6 +15,8 @@ type Registry struct {
 	s asnList
 }
 
+//Lookup returns the ASN for the given IP address.
+//bool will be true if ASN is valid
 func (r *Registry) Lookup(ip netip.Addr) (ASN, bool) {
 	index := sort.Search(len(r.s),
 		//this function should not be moved into a method
@@ -22,14 +24,21 @@ func (r *Registry) Lookup(ip netip.Addr) (ASN, bool) {
 		func(i int) bool {
 			return ip.Less(r.s[i].StartIP)
 		})
-	//valid indexes will always be offset by +1
-	//so anything less than 1 is invalid
-	if index <= 0 {
+	//index will always be offset by +1 due to our sorting method, so we need to subtract 1
+	index--
+	//when the index is negative its bellow our lower bound
+	if index < 0 {
 		return ASN{}, false
 	}
-	index--
-	if index < len(r.s) {
-		return r.s[index], true
+
+	//when the index is equal to the length of the slice
+	//we have to manually check if the ip is part of the last ASN zone
+	//or is it actually above our higher bound
+	if index >= len(r.s)-1 {
+		if r.s[index].Contains(ip) {
+			return r.s[index], true
+		}
+		return ASN{}, false
 	}
-	return ASN{}, false
+	return r.s[index], true
 }
