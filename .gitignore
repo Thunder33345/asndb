@@ -2,3 +2,4 @@
 local/
 ip2asn-combined.*
 *.exe
+*.tsv
