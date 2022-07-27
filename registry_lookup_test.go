@@ -18,7 +18,7 @@ func loadDB() {
 	if err != nil {
 		panic(err)
 	}
-	list, err = LoadReader(f)
+	list, err = LoadFromTSV(f)
 	if err != nil {
 		panic(err)
 	}
@@ -66,6 +66,7 @@ func Benchmark_LookupV6(b *testing.B) {
 		{netip.MustParseAddr("2606:4700:4700::1111"), "cf"},
 		{netip.MustParseAddr("f4d:c7c7::"), "not routed"},
 		{netip.MustParseAddr("2001:4860:4860::8888"), "google"},
+		{netip.MustParseAddr("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"), "last"},
 	}
 	for _, e := range addrList {
 		name := e.addr.String()
