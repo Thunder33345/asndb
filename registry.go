@@ -22,7 +22,11 @@ func (r *Registry) Lookup(ip netip.Addr) (ASN, bool) {
 		func(i int) bool {
 			return ip.Less(r.s[i].StartIP)
 		})
-	//index will always be offset by +1
+	//valid indexes will always be offset by +1
+	//so anything less than 1 is invalid
+	if index <= 0 {
+		return ASN{}, false
+	}
 	index--
 	if index < len(r.s) {
 		return r.s[index], true
