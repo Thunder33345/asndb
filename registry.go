@@ -7,7 +7,8 @@ import (
 
 func NewRegistry(s []ASN) *Registry {
 	sort.Sort(asnList(s))
-	return &Registry{s}
+	s = s[:len(s):len(s)]
+	return &Registry{s: s}
 }
 
 type Registry struct {
