@@ -25,7 +25,7 @@ func loadDB() {
 	fmt.Printf("Done database...\n")
 }
 
-func BenchmarkList_LookupV4(b *testing.B) {
+func Benchmark_LookupV4(b *testing.B) {
 	loadDB()
 
 	type entry struct {
@@ -52,7 +52,8 @@ func BenchmarkList_LookupV4(b *testing.B) {
 		})
 	}
 }
-func BenchmarkList_LookupV6(b *testing.B) {
+
+func Benchmark_LookupV6(b *testing.B) {
 	loadDB()
 
 	type entry struct {
@@ -78,7 +79,8 @@ func BenchmarkList_LookupV6(b *testing.B) {
 		})
 	}
 }
-func BenchmarkList_LookupSimple(b *testing.B) {
+
+func Benchmark_LookupSimple(b *testing.B) {
 	loadDB()
 	addr := netip.MustParseAddr("1.1.1.1")
 	b.Run("1.1.1.1 cf", func(b *testing.B) {
