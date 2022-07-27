@@ -3,35 +3,20 @@ package asndb
 import (
 	"bufio"
 	"compress/gzip"
-	"fmt"
 	"io"
 	"net/http"
 	"net/netip"
-	"sort"
 	"strconv"
 	"strings"
 )
 
-const ip2dsnLink = "https://iptoasn.com/data/ip2asn-v4.tsv.gz"
+const _ = "https://iptoasn.com/data/ip2asn-combined.tsv.gz"
 
-func _() {
-	dsnMap, err := Load(ip2dsnLink)
-	if err != nil {
-		panic(err)
-	}
-
-	dsn, ok := dsnMap.Lookup(netip.MustParseAddr("xxx.xxx.xxx.xxx"))
-	fmt.Printf("dsn: %+v\n", dsn)
-	fmt.Printf("ok: %t", ok)
-}
-
-func Load(url string) (*Registry, error) {
+func DownloadFromURL(url string) (io.ReadCloser, error) {
 	rs, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
-
-	defer rs.Body.Close()
 
 	gzipReader, err := gzip.NewReader(rs.Body)
 	if err != nil {
@@ -39,27 +24,31 @@ func Load(url string) (*Registry, error) {
 	}
 	defer gzipReader.Close()
 
-	return LoadReader(gzipReader)
+	return gzipReader, nil
 }
 
-func LoadReader(reader io.Reader) (*Registry, error) {
-	var s asnList
+func LoadFromTSV(reader io.Reader) (*Registry, error) {
+	var s []ASN
 	buf := bufio.NewScanner(reader)
 	for buf.Scan() {
 		parts := strings.Split(buf.Text(), "\t")
 
 		asNumber, _ := strconv.Atoi(parts[2])
+		start, err := netip.ParseAddr(parts[0])
+		if err != nil {
+			return nil, err
+		}
+		end, err := netip.ParseAddr(parts[1])
+		if err != nil {
+			return nil, err
+		}
 		s = append(s, ASN{
-			StartIP:       netip.MustParseAddr(parts[0]),
-			EndIP:         netip.MustParseAddr(parts[1]),
+			StartIP:       start,
+			EndIP:         end,
 			ASNumber:      asNumber,
 			CountryCode:   parts[3],
 			ASDescription: parts[4],
 		})
 	}
-	if !sort.IsSorted(s) {
-		sort.Sort(s)
-	}
-
-	return &Registry{s: s}, nil
+	return NewRegistry(s), nil
 }
