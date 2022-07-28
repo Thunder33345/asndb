@@ -6,17 +6,24 @@ import (
 )
 
 //NewRegistry creates a new registry from the given list of AS zones.
-//The slice will automatically be sorted by StartIP.
-//Given slice should not be modified afterwards.
+//The given slice will be cloned and sorted by StartIP.
 func NewRegistry(s []AS) *Registry {
+	s = clone(s)
 	sort.Sort(asList(s))
 	s = s[:len(s):len(s)]
-	return &Registry{s: s}
+
+	m := make(map[int][]AS)
+	for _, asn := range s {
+		m[asn.ASNumber] = append(m[asn.ASNumber], asn)
+	}
+
+	return &Registry{s: s, m: m}
 }
 
 //Registry holds a list of AS zones.
 type Registry struct {
 	s asList
+	m map[int][]AS
 }
 
 //Lookup finds and returns the AS zone for a given IP address.
@@ -45,4 +52,37 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 		return AS{}, false
 	}
 	return r.s[index], true
+}
+
+//ListZone returns a list of AS zones controlled by given asn.
+//The returned slice will be cloned and can be freely edited.
+func (r *Registry) ListZone(asn int) ([]AS, bool) {
+	s, ok := r.m[asn]
+	return clone(s), ok
+}
+
+//ListASN returns a list of ASN.
+//Behaviour of AS's details are undefined if details are inconsistent.
+//AS.StartIP and AS.EndIP will not be defined.
+func (r *Registry) ListASN() []AS {
+	s := make([]AS, 0, len(r.m))
+	for asn, as := range r.m {
+		t := AS{
+			ASNumber: asn,
+		}
+		if len(as) >= 1 {
+			t.CountryCode = as[0].CountryCode
+			t.ASDescription = as[0].ASDescription
+		}
+		s = append(s, t)
+	}
+	sort.Sort(asList(s))
+	return s
+}
+
+func clone[S ~[]E, E any](s S) S {
+	if s == nil {
+		return nil
+	}
+	return append(make(S, 0, len(s)), s...)
 }
