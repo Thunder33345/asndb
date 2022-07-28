@@ -5,18 +5,22 @@ import (
 	"sort"
 )
 
+//NewRegistry creates a new registry from the given list of ASN zones.
+//The slice will automatically be sorted by StartIP.
+//Given slice should not be modified afterwards.
 func NewRegistry(s []ASN) *Registry {
 	sort.Sort(asnList(s))
 	s = s[:len(s):len(s)]
 	return &Registry{s: s}
 }
 
+//Registry holds a list of ASN zones.
 type Registry struct {
 	s asnList
 }
 
-//Lookup returns the ASN for the given IP address.
-//bool will be true if ASN is valid
+//Lookup finds and returns the ASN for a given IP address.
+//Bool indicates if ASN valid and found
 func (r *Registry) Lookup(ip netip.Addr) (ASN, bool) {
 	index := sort.Search(len(r.s),
 		//this function should not be moved into a method

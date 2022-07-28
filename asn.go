@@ -5,6 +5,8 @@ import (
 	"net/netip"
 )
 
+//ASN contains information about an ASN.
+//the StartIP and EndIP denotes a range that belongs to the ASN.
 type ASN struct {
 	StartIP       netip.Addr
 	EndIP         netip.Addr
@@ -13,10 +15,12 @@ type ASN struct {
 	ASDescription string
 }
 
+//String returns a string representation of the ASN.
 func (a ASN) String() string {
 	return fmt.Sprintf("AS%d(%s)@%s [%s->%s]", a.ASNumber, a.ASDescription, a.CountryCode, a.StartIP.String(), a.EndIP.String())
 }
 
+//Contains checks if an ip is part of this ASN zone.
 func (a ASN) Contains(ip netip.Addr) bool {
 	return ip.Compare(a.StartIP) >= 0 && ip.Compare(a.EndIP) <= 0
 }
