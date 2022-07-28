@@ -28,7 +28,7 @@ func DownloadFromURL(url string) (io.ReadCloser, error) {
 }
 
 func LoadFromTSV(reader io.Reader) (*Registry, error) {
-	var s []ASN
+	var s []AS
 	buf := bufio.NewScanner(reader)
 	for buf.Scan() {
 		parts := strings.Split(buf.Text(), "\t")
@@ -42,7 +42,7 @@ func LoadFromTSV(reader io.Reader) (*Registry, error) {
 		if err != nil {
 			return nil, err
 		}
-		s = append(s, ASN{
+		s = append(s, AS{
 			StartIP:       start,
 			EndIP:         end,
 			ASNumber:      asNumber,

@@ -5,9 +5,9 @@ import (
 	"net/netip"
 )
 
-//ASN contains information about an ASN.
-//the StartIP and EndIP denotes a range that belongs to the ASN.
-type ASN struct {
+//AS contains information about an AS zone belonging to an ASNumber.
+//the StartIP and EndIP denotes a range that belongs to the AS.
+type AS struct {
 	StartIP       netip.Addr
 	EndIP         netip.Addr
 	ASNumber      int
@@ -15,26 +15,26 @@ type ASN struct {
 	ASDescription string
 }
 
-//String returns a string representation of the ASN.
-func (a ASN) String() string {
+//String returns a string representation of the AS.
+func (a AS) String() string {
 	return fmt.Sprintf("AS%d(%s)@%s [%s->%s]", a.ASNumber, a.ASDescription, a.CountryCode, a.StartIP.String(), a.EndIP.String())
 }
 
-//Contains checks if an ip is part of this ASN zone.
-func (a ASN) Contains(ip netip.Addr) bool {
+//Contains checks if an ip is part of this AS zone.
+func (a AS) Contains(ip netip.Addr) bool {
 	return ip.Compare(a.StartIP) >= 0 && ip.Compare(a.EndIP) <= 0
 }
 
-type asnList []ASN
+type asList []AS
 
-func (a asnList) Len() int {
+func (a asList) Len() int {
 	return len(a)
 }
 
-func (a asnList) Less(i, j int) bool {
+func (a asList) Less(i, j int) bool {
 	return a[i].StartIP.Less(a[j].StartIP)
 }
 
-func (a asnList) Swap(i, j int) {
+func (a asList) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }

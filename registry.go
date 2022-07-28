@@ -5,23 +5,23 @@ import (
 	"sort"
 )
 
-//NewRegistry creates a new registry from the given list of ASN zones.
+//NewRegistry creates a new registry from the given list of AS zones.
 //The slice will automatically be sorted by StartIP.
 //Given slice should not be modified afterwards.
-func NewRegistry(s []ASN) *Registry {
-	sort.Sort(asnList(s))
+func NewRegistry(s []AS) *Registry {
+	sort.Sort(asList(s))
 	s = s[:len(s):len(s)]
 	return &Registry{s: s}
 }
 
-//Registry holds a list of ASN zones.
+//Registry holds a list of AS zones.
 type Registry struct {
-	s asnList
+	s asList
 }
 
-//Lookup finds and returns the ASN for a given IP address.
-//Bool indicates if ASN valid and found
-func (r *Registry) Lookup(ip netip.Addr) (ASN, bool) {
+//Lookup finds and returns the AS zone for a given IP address.
+//Bool indicates if AS is valid and found
+func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 	index := sort.Search(len(r.s),
 		//this function should not be moved into a method
 		//otherwise heap allocations will be made
@@ -32,17 +32,17 @@ func (r *Registry) Lookup(ip netip.Addr) (ASN, bool) {
 	index--
 	//when the index is negative its bellow our lower bound
 	if index < 0 {
-		return ASN{}, false
+		return AS{}, false
 	}
 
 	//when the index is equal to the length of the slice
-	//we have to manually check if the ip is part of the last ASN zone
+	//we have to manually check if the ip is part of the last AS zone
 	//or is it actually above our higher bound
 	if index >= len(r.s)-1 {
 		if r.s[index].Contains(ip) {
 			return r.s[index], true
 		}
-		return ASN{}, false
+		return AS{}, false
 	}
 	return r.s[index], true
 }

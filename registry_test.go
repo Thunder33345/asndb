@@ -9,12 +9,12 @@ import (
 func TestNewRegistry(t *testing.T) {
 	tests := []struct {
 		name    string
-		asn     []ASN
+		asn     []AS
 		wantASN []int
 	}{
 		{
 			name: "test sort",
-			asn: []ASN{
+			asn: []AS{
 				{
 					StartIP:  netip.MustParseAddr("2.0.0.0"),
 					EndIP:    netip.MustParseAddr("3.0.0.0"),
@@ -57,7 +57,7 @@ func TestNewRegistry(t *testing.T) {
 }
 
 func TestRegistry_Lookup(t *testing.T) {
-	r := NewRegistry([]ASN{
+	r := NewRegistry([]AS{
 		{
 			StartIP:  netip.MustParseAddr("1.0.0.0"),
 			EndIP:    netip.MustParseAddr("1.255.255.255"),
