@@ -25,6 +25,20 @@ func loadDB() {
 	fmt.Printf("Done database...\n")
 }
 
+func BenchmarkLoad(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		f, err := os.Open("./ip2asn-combined.tsv")
+		if err != nil {
+			panic(err)
+		}
+		_, err = LoadFromTSV(f)
+		f.Close()
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func Benchmark_LookupV4(b *testing.B) {
 	loadDB()
 
