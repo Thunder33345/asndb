@@ -6,6 +6,51 @@ import (
 	"testing"
 )
 
+func TestNewRegistry(t *testing.T) {
+	tests := []struct {
+		name string
+		asn  []ASN
+	}{
+		{
+			name: "test sort",
+			asn: []ASN{
+				{
+					StartIP:  netip.MustParseAddr("2.0.0.0"),
+					EndIP:    netip.MustParseAddr("3.0.0.0"),
+					ASNumber: 1,
+				},
+				{
+					StartIP:  netip.MustParseAddr("1.0.0.0"),
+					EndIP:    netip.MustParseAddr("2.0.0.0"),
+					ASNumber: 0,
+				},
+				{
+					StartIP:  netip.MustParseAddr("4.0.0.0"),
+					EndIP:    netip.MustParseAddr("5.0.0.0"),
+					ASNumber: 3,
+				},
+
+				{
+					StartIP:  netip.MustParseAddr("3.0.0.0"),
+					EndIP:    netip.MustParseAddr("4.0.0.0"),
+					ASNumber: 2,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewRegistry(tt.asn)
+			for i := 0; i < len(tt.asn); i++ {
+				gotAsn := got.s[i].ASNumber
+				if gotAsn != i {
+					t.Errorf("ASN.s[%d].ASNumber = %v, want %v", i, gotAsn, i)
+				}
+			}
+		})
+	}
+}
+
 func TestRegistry_Lookup(t *testing.T) {
 	r := NewRegistry([]ASN{
 		{
