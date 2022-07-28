@@ -8,8 +8,9 @@ import (
 
 func TestNewRegistry(t *testing.T) {
 	tests := []struct {
-		name string
-		asn  []ASN
+		name    string
+		asn     []ASN
+		wantASN []int
 	}{
 		{
 			name: "test sort",
@@ -29,19 +30,23 @@ func TestNewRegistry(t *testing.T) {
 					EndIP:    netip.MustParseAddr("5.0.0.0"),
 					ASNumber: 3,
 				},
-
 				{
 					StartIP:  netip.MustParseAddr("3.0.0.0"),
 					EndIP:    netip.MustParseAddr("4.0.0.0"),
 					ASNumber: 2,
+				}, {
+					StartIP:  netip.MustParseAddr("5.0.0.0"),
+					EndIP:    netip.MustParseAddr("6.0.0.0"),
+					ASNumber: 2,
 				},
 			},
+			wantASN: []int{0, 1, 2, 3, 2},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := NewRegistry(tt.asn)
-			for i := 0; i < len(tt.asn); i++ {
+			for _, i := range tt.wantASN {
 				gotAsn := got.s[i].ASNumber
 				if gotAsn != i {
 					t.Errorf("ASN.s[%d].ASNumber = %v, want %v", i, gotAsn, i)
