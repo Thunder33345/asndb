@@ -9,7 +9,7 @@ import (
 //The given slice will be cloned and sorted by StartIP.
 func NewRegistry(s []AS) *Registry {
 	s = clone(s)
-	sort.Sort(asList(s))
+	sort.Sort(asSortIP(s))
 	s = s[:len(s):len(s)]
 
 	m := make(map[int][]AS)

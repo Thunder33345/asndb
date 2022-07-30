@@ -25,16 +25,16 @@ func (a AS) Contains(ip netip.Addr) bool {
 	return ip.Compare(a.StartIP) >= 0 && ip.Compare(a.EndIP) <= 0
 }
 
-type asList []AS
+type asSortIP []AS
 
-func (a asList) Len() int {
+func (a asSortIP) Len() int {
 	return len(a)
 }
 
-func (a asList) Less(i, j int) bool {
+func (a asSortIP) Less(i, j int) bool {
 	return a[i].StartIP.Less(a[j].StartIP)
 }
 
-func (a asList) Swap(i, j int) {
+func (a asSortIP) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
