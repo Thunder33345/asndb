@@ -59,11 +59,17 @@ func TestNewRegistry(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := NewRegistry(tt.asn)
-			for _, i := range tt.wantASN {
+			var asl []int
+			for i, want := range tt.wantASN {
 				gotAsn := got.s[i].ASNumber
-				if gotAsn != i {
-					t.Errorf("ASN.s[%d].ASNumber = %v, want %v", i, gotAsn, i)
+				asl = append(asl, got.s[i].ASNumber)
+				if gotAsn != want {
+					t.Errorf("ASN.s[%d].ASNumber = %v, want %v", i, gotAsn, want)
 				}
+			}
+			if t.Failed() {
+				t.Logf("wanted asn: %v", tt.wantASN)
+				t.Logf("got asn: %v", asl)
 			}
 			gotZoneLen := len(got.s)
 			if gotZoneLen != tt.wantZoneLen {
@@ -357,7 +363,7 @@ func TestRegistry_Integration(t *testing.T) {
 		l := r.ListASN()
 		for i, as := range wantASNList {
 			if l[i] != as {
-				t.Errorf("ASN.ListASN()[%d] = %v, want %v", i, l[i], as)
+				t.Errorf("ASN.ListASN()[%d] = %v, want %v", i, l[i].ASNumber, as.ASNumber)
 			}
 		}
 	})
