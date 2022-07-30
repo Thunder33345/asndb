@@ -17,7 +17,11 @@ type AS struct {
 
 //String returns a string representation of the AS.
 func (a AS) String() string {
-	return fmt.Sprintf("AS%d(%s)@%s [%s->%s]", a.ASNumber, a.ASDescription, a.CountryCode, a.StartIP.String(), a.EndIP.String())
+	ip := "[invalid]"
+	if a.StartIP.IsValid() && a.EndIP.IsValid() {
+		ip = fmt.Sprintf("[%s->%s]", a.StartIP, a.EndIP)
+	}
+	return fmt.Sprintf("AS%d(%s)@%s %s", a.ASNumber, a.ASDescription, a.CountryCode, ip)
 }
 
 //Contains checks if an ip is part of this AS zone.
