@@ -17,17 +17,19 @@ func NewRegistry(s []AS) *Registry {
 		m[asn.ASNumber] = append(m[asn.ASNumber], asn)
 	}
 
-	return &Registry{s: s, m: m}
+	return &Registry{s: s, m: m, assumeFound: false}
 }
 
 //Registry holds a list of AS zones.
 type Registry struct {
-	s asList
-	m map[int][]AS
+	s           asList
+	m           map[int][]AS
+	assumeFound bool
 }
 
 //Lookup finds and returns the AS zone for a given IP address.
 //Bool indicates if AS is valid and found
+//Notice: if multiple zones claims an IP, the closest AS zone gets returned.
 func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 	index := sort.Search(len(r.s),
 		//this function should not be moved into a method
@@ -51,7 +53,17 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 		}
 		return AS{}, false
 	}
-	return r.s[index], true
+
+	//if we don't care about possible inaccuracies that will occur in a gap of unclaimed ips between AS zones
+	if r.assumeFound {
+		return r.s[index], true
+	}
+
+	//otherwise we check before returning
+	if r.s[index].Contains(ip) {
+		return r.s[index], true
+	}
+	return AS{}, false
 }
 
 //ListZone returns a list of AS zones controlled by given asn.
