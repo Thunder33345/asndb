@@ -2,30 +2,11 @@ package asndb
 
 import (
 	"bufio"
-	"compress/gzip"
 	"io"
-	"net/http"
 	"net/netip"
 	"strconv"
 	"strings"
 )
-
-const _ = "https://iptoasn.com/data/ip2asn-combined.tsv.gz"
-
-func DownloadFromURL(url string) (io.ReadCloser, error) {
-	rs, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-
-	gzipReader, err := gzip.NewReader(rs.Body)
-	if err != nil {
-		return nil, err
-	}
-	defer gzipReader.Close()
-
-	return gzipReader, nil
-}
 
 func LoadFromTSV(reader io.Reader) (*Registry, error) {
 	var s []AS
