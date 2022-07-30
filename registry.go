@@ -7,7 +7,7 @@ import (
 
 //NewRegistry creates a new registry from the given list of AS zones.
 //The given slice will be cloned and sorted by StartIP.
-func NewRegistry(s []AS) *Registry {
+func NewRegistry(s []AS, opts ...Option) *Registry {
 	s = clone(s)
 	sort.Sort(asSortIP(s))
 	s = s[:len(s):len(s)]
@@ -17,14 +17,19 @@ func NewRegistry(s []AS) *Registry {
 		m[asn.ASNumber] = append(m[asn.ASNumber], asn)
 	}
 
-	return &Registry{s: s, m: m}
+	r := &Registry{s: s, m: m}
+	for _, opt := range opts {
+		opt(r)
+	}
+
+	return r
 }
 
 //Registry holds a list of AS zones.
 type Registry struct {
 	s           []AS
 	m           map[int][]AS
-	assumeFound bool
+	assumeValid bool
 	searchRange int
 }
 
@@ -56,7 +61,7 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 	}
 
 	//if we don't care about possible inaccuracies that will occur in a gap of unclaimed ips between AS zones
-	if r.assumeFound {
+	if r.assumeValid {
 		return r.s[index], true
 	}
 
