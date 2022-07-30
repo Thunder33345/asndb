@@ -111,9 +111,7 @@ func (r *Registry) ListASN() []AS {
 		}
 		s = append(s, t)
 	}
-	sort.Slice(s, func(i, j int) bool {
-		return s[i].ASNumber < s[j].ASNumber
-	})
+	sort.Sort(asSortASN(s))
 	return s
 }
 
