@@ -22,7 +22,7 @@ func NewRegistry(s []AS) *Registry {
 
 //Registry holds a list of AS zones.
 type Registry struct {
-	s           asList
+	s           []AS
 	m           map[int][]AS
 	assumeFound bool
 	searchRange int
