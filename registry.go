@@ -17,7 +17,7 @@ func NewRegistry(s []AS) *Registry {
 		m[asn.ASNumber] = append(m[asn.ASNumber], asn)
 	}
 
-	return &Registry{s: s, m: m, assumeFound: false}
+	return &Registry{s: s, m: m}
 }
 
 //Registry holds a list of AS zones.
@@ -25,6 +25,7 @@ type Registry struct {
 	s           asList
 	m           map[int][]AS
 	assumeFound bool
+	searchRange int
 }
 
 //Lookup finds and returns the AS zone for a given IP address.
@@ -64,6 +65,28 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 		return r.s[index], true
 	}
 	return AS{}, false
+}
+
+//MultiLookup attempts to find and return neighbouring AS that contain given ip address.
+func (r *Registry) MultiLookup(ip netip.Addr) []AS {
+	index := sort.Search(len(r.s),
+		//this function should not be moved into a method
+		//otherwise heap allocations will be made
+		func(i int) bool {
+			return ip.Less(r.s[i].StartIP)
+		})
+	index--
+	var s []AS
+	for i := index - r.searchRange; i < index+r.searchRange; i++ {
+		if i < 0 || i >= len(r.s) {
+			continue
+		}
+		if r.s[i].Contains(ip) {
+			s = append(s, r.s[i])
+		}
+	}
+
+	return s
 }
 
 //ListZone returns a list of AS zones controlled by given asn.
