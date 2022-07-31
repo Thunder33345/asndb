@@ -54,6 +54,7 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 	//we have to manually check if the ip is part of the last AS zone
 	//or is it actually above our higher bound
 	if index >= len(r.s)-1 {
+		index = len(r.s) - 1
 		if r.s[index].Contains(ip) {
 			return r.s[index], true
 		}
@@ -83,13 +84,16 @@ func (r *Registry) MultiLookup(ip netip.Addr, search int) []AS {
 	var s []AS
 	//remove offset
 	index--
+	if index > len(r.s)-1 {
+		index = len(r.s) - 1
+	}
 
 	//loop that counts form 0 till search (acting as a search space)
 	//we only search downwards because the slice get sorted by AS.StartIP
 	//so it's not possible to have any AS above index that can claim the ip
 	for i := 0; i <= search; i++ {
 		//create an offset index
-		ix := index + (-i)
+		ix := index - i
 		if ix < 0 {
 			break
 		}
