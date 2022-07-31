@@ -82,24 +82,27 @@ func (r *Registry) MultiLookup(ip netip.Addr, search int) []AS {
 		})
 	index--
 	var s []AS
-	if index < 0 || index >= len(r.s) {
-		return s
+
+	addIfValid := func(ip netip.Addr, index int) bool {
+		if index < 0 || index >= len(r.s) {
+			return false
+		}
+		res := r.s[index]
+		if res.Contains(ip) {
+			s = append(s, res)
+			return true
+		}
+		return false
 	}
-	if r.s[index].Contains(ip) {
-		s = append(s, r.s[index])
-	}
-	multi := []int{-1, 1}
-flipDir:
-	for _, m := range multi {
-		sb := search
-		for i := 0; i < sb; i++ {
-			o := index + (i * m) + m
-			if o < 0 || o >= len(r.s) {
-				continue flipDir
-			}
-			if r.s[o].Contains(ip) {
-				s = append(s, r.s[o])
-				sb++
+
+	addIfValid(ip, index)
+
+	m := []int{-1, 1}
+	for i := 1; i < search; i++ {
+		for _, mul := range m {
+			sel := index + (i * mul)
+			if addIfValid(ip, sel) {
+				search++
 			}
 		}
 	}
