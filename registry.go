@@ -30,7 +30,6 @@ type Registry struct {
 	s           []AS
 	m           map[int][]AS
 	assumeValid bool
-	searchRange int
 }
 
 //Lookup finds and returns the AS zone for a given IP address.

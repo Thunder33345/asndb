@@ -7,9 +7,3 @@ func WithAssumeValid() Option {
 		r.assumeValid = true
 	}
 }
-
-func WithSearchRange(searchRange int) Option {
-	return func(r *Registry) {
-		r.searchRange = searchRange
-	}
-}
