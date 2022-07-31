@@ -74,36 +74,30 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 
 //MultiLookup attempts to find and return neighbouring AS that contain given ip address.
 func (r *Registry) MultiLookup(ip netip.Addr, search int) []AS {
+	//get an index
 	index := sort.Search(len(r.s),
-		//this function should not be moved into a method
-		//otherwise heap allocations will be made
 		func(i int) bool {
 			return ip.Less(r.s[i].StartIP)
 		})
-	index--
+	//create a slice of AS
 	var s []AS
+	//remove offset
+	index--
 
-	addIfValid := func(ip netip.Addr, index int) bool {
-		if index < 0 || index >= len(r.s) {
-			return false
+	//loop that counts form 0 till search (acting as a search space)
+	//we only search downwards because the slice get sorted by AS.StartIP
+	//so it's not possible to have any AS above index that can claim the ip
+	for i := 0; i <= search; i++ {
+		//create an offset index
+		ix := index + (-i)
+		if ix < 0 {
+			break
 		}
-		res := r.s[index]
-		if res.Contains(ip) {
-			s = append(s, res)
-			return true
-		}
-		return false
-	}
-
-	addIfValid(ip, index)
-
-	m := []int{-1, 1}
-	for i := 1; i < search; i++ {
-		for _, mul := range m {
-			sel := index + (i * mul)
-			if addIfValid(ip, sel) {
-				search++
-			}
+		//if the AS contains the IP, we add it to the slice
+		if r.s[ix].Contains(ip) {
+			s = append(s, r.s[ix])
+			//expand the search space for every valid result
+			search++
 		}
 	}
 
