@@ -73,7 +73,7 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 }
 
 //MultiLookup attempts to find and return neighbouring AS that contain given ip address.
-func (r *Registry) MultiLookup(ip netip.Addr) []AS {
+func (r *Registry) MultiLookup(ip netip.Addr, search int) []AS {
 	index := sort.Search(len(r.s),
 		//this function should not be moved into a method
 		//otherwise heap allocations will be made
@@ -82,12 +82,25 @@ func (r *Registry) MultiLookup(ip netip.Addr) []AS {
 		})
 	index--
 	var s []AS
-	for i := index - r.searchRange; i < index+r.searchRange; i++ {
-		if i < 0 || i >= len(r.s) {
-			continue
-		}
-		if r.s[i].Contains(ip) {
-			s = append(s, r.s[i])
+	if index < 0 || index >= len(r.s) {
+		return s
+	}
+	if r.s[index].Contains(ip) {
+		s = append(s, r.s[index])
+	}
+	multi := []int{-1, 1}
+flipDir:
+	for _, m := range multi {
+		sb := search
+		for i := 0; i < sb; i++ {
+			o := index + (i * m) + m
+			if o < 0 || o >= len(r.s) {
+				continue flipDir
+			}
+			if r.s[o].Contains(ip) {
+				s = append(s, r.s[o])
+				sb++
+			}
 		}
 	}
 
