@@ -60,15 +60,13 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 		return AS{}, false
 	}
 
-	//if we don't care about possible inaccuracies that will occur in a gap of unclaimed ips between AS zones
-	if r.assumeValid {
+	//returns the AS if we don't care about possible inaccuracies
+	//(which will occur in a gap of unclaimed ips between AS zones)
+	//otherwise we check if it's part of the AS zone
+	if r.assumeValid || r.s[index].Contains(ip) {
 		return r.s[index], true
 	}
 
-	//otherwise we check before returning
-	if r.s[index].Contains(ip) {
-		return r.s[index], true
-	}
 	return AS{}, false
 }
 
