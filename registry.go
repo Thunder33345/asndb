@@ -71,7 +71,7 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 }
 
 //MultiLookup attempts to find and return neighbouring AS that contain given ip address.
-func (r *Registry) MultiLookup(ip netip.Addr, search int) []AS {
+func (r *Registry) MultiLookup(ip netip.Addr, search uint) []AS {
 	//get an index
 	index := sort.Search(len(r.s),
 		func(i int) bool {
@@ -81,14 +81,11 @@ func (r *Registry) MultiLookup(ip netip.Addr, search int) []AS {
 	var s []AS
 	//remove offset
 	index--
-	if index > len(r.s)-1 {
-		index = len(r.s) - 1
-	}
 
 	//loop that counts form 0 till search (acting as a search space)
 	//we only search downwards because the slice get sorted by AS.StartIP
 	//so it's not possible to have any AS above index that can claim the ip
-	for i := 0; i <= search; i++ {
+	for i := 0; i <= int(search); i++ {
 		//create an offset index
 		ix := index - i
 		if ix < 0 {
