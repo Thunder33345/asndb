@@ -5,8 +5,8 @@ import (
 	"net/netip"
 )
 
-//AS contains information about an AS zone belonging to an ASNumber.
-//the StartIP and EndIP denotes a range that belongs to the AS.
+// AS contains information about an AS zone belonging to an ASNumber.
+// the StartIP and EndIP denotes a range that belongs to the AS.
 type AS struct {
 	StartIP       netip.Addr
 	EndIP         netip.Addr
@@ -15,16 +15,16 @@ type AS struct {
 	ASDescription string
 }
 
-//String returns a string representation of the AS.
+// String returns a string representation of the AS.
 func (a AS) String() string {
 	ip := "[invalid]"
 	if a.StartIP.IsValid() && a.EndIP.IsValid() {
 		ip = fmt.Sprintf("[%s->%s]", a.StartIP, a.EndIP)
 	}
-	return fmt.Sprintf("AS%d(%s)@%s %s", a.ASNumber, a.ASDescription, a.CountryCode, ip)
+	return fmt.Sprintf("AS%d(%s)@%s%s", a.ASNumber, a.ASDescription, a.CountryCode, ip)
 }
 
-//Contains checks if an ip is part of this AS zone.
+// Contains checks if an ip is part of this AS zone.
 func (a AS) Contains(ip netip.Addr) bool {
 	return ip.Compare(a.StartIP) >= 0 && ip.Compare(a.EndIP) <= 0
 }

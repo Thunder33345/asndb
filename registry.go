@@ -5,8 +5,8 @@ import (
 	"sort"
 )
 
-//NewRegistry creates a new registry from the given list of AS zones.
-//The given slice will be cloned and sorted by StartIP.
+// NewRegistry creates a new registry from the given list of AS zones.
+// The given slice will be cloned and sorted by StartIP.
 func NewRegistry(s []AS, opts ...Option) *Registry {
 	s = clone(s)
 	sort.Sort(asSortIP(s))
@@ -25,16 +25,16 @@ func NewRegistry(s []AS, opts ...Option) *Registry {
 	return r
 }
 
-//Registry holds a list of AS zones.
+// Registry holds a list of AS zones.
 type Registry struct {
 	s           []AS
 	m           map[int][]AS
 	assumeValid bool
 }
 
-//Lookup finds and returns the AS zone for a given IP address.
-//Bool indicates if AS is valid and found
-//Notice: if multiple zones claims an IP, the closest AS zone gets returned.
+// Lookup finds and returns the AS zone for a given IP address.
+// Bool indicates if AS is valid and found
+// Notice: if multiple zones claims an IP, the closest AS zone gets returned.
 func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 	//get an index
 	index := r.getIndex(ip)
@@ -64,14 +64,12 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 	return AS{}, false
 }
 
-//MultiLookup attempts to find and return neighbouring AS that contain given ip address.
+// MultiLookup attempts to find and return neighbouring AS that contain given ip address.
 func (r *Registry) MultiLookup(ip netip.Addr, search uint) []AS {
 	//get an index
 	index := r.getIndex(ip)
 	//create a slice of AS
 	var s []AS
-	//remove offset
-	index--
 
 	//loop that counts form 0 till search (acting as a search space)
 	//we only search downwards because the slice get sorted by AS.StartIP
@@ -105,16 +103,16 @@ func (r *Registry) getIndex(ip netip.Addr) int {
 	return index
 }
 
-//ListZone returns a list of AS zones controlled by given asn.
-//The returned slice will be cloned and can be freely edited.
+// ListZone returns a list of AS zones controlled by given asn.
+// The returned slice will be cloned and can be freely edited.
 func (r *Registry) ListZone(asn int) ([]AS, bool) {
 	s, ok := r.m[asn]
 	return clone(s), ok
 }
 
-//ListASN returns a list of ASN.
-//Behaviour of AS's details are undefined if details are inconsistent.
-//AS.StartIP and AS.EndIP will not be defined.
+// ListASN returns a list of ASN.
+// Behaviour of AS's details are undefined if details are inconsistent.
+// AS.StartIP and AS.EndIP will not be defined.
 func (r *Registry) ListASN() []AS {
 	s := make([]AS, 0, len(r.m))
 	for asn, as := range r.m {
