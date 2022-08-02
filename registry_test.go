@@ -84,7 +84,7 @@ func TestNewRegistry(t *testing.T) {
 	}
 }
 
-func TestRegistry_Lookup2(t *testing.T) {
+func TestRegistry_Lookup(t *testing.T) {
 	type subtest struct {
 		name      string
 		ip        netip.Addr
@@ -276,6 +276,265 @@ func TestRegistry_Lookup2(t *testing.T) {
 					}
 					if t.Failed() {
 						t.Logf("Registry.Lookup() AS = %v, Found = %v, ASN = %d", gotAS, gotFound, gotAS.ASNumber)
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestRegistry_MultiLookup(t *testing.T) {
+	type subtest struct {
+		name    string
+		ip      netip.Addr
+		search  uint
+		wantASN []int
+		//wantAS  []AS
+	}
+	tests := []struct {
+		name    string
+		r       *Registry
+		lookups []subtest
+	}{
+		{
+			name: "overlapping 1",
+			r: NewRegistry([]AS{
+				{
+					ASNumber: 1,
+					StartIP:  netip.MustParseAddr("1.0.0.0"),
+					EndIP:    netip.MustParseAddr("1.255.255.255"),
+				}, {
+					ASNumber: 1,
+					StartIP:  netip.MustParseAddr("1.5.0.0"),
+					EndIP:    netip.MustParseAddr("1.255.255.255"),
+				}, {
+					ASNumber: 2,
+					StartIP:  netip.MustParseAddr("1.30.0.0"),
+					EndIP:    netip.MustParseAddr("2.255.255.255"),
+				}, {
+					ASNumber: 2,
+					StartIP:  netip.MustParseAddr("1.50.0.0"),
+					EndIP:    netip.MustParseAddr("2.255.255.255"),
+				}, {
+					ASNumber: 100,
+					StartIP:  netip.MustParseAddr("1.50.0.0"),
+					EndIP:    netip.MustParseAddr("1.50.255.255"),
+				}, {
+					ASNumber: 3,
+					StartIP:  netip.MustParseAddr("1.60.0.0"),
+					EndIP:    netip.MustParseAddr("3.255.255.255"),
+				}, {
+					ASNumber: 100,
+					StartIP:  netip.MustParseAddr("1.61.0.0"),
+					EndIP:    netip.MustParseAddr("1.61.255.255"),
+				}, {
+					ASNumber: 3,
+					StartIP:  netip.MustParseAddr("1.62.0.0"),
+					EndIP:    netip.MustParseAddr("3.255.255.255"),
+				}, {
+					ASNumber: 100,
+					StartIP:  netip.MustParseAddr("1.63.0.0"),
+					EndIP:    netip.MustParseAddr("1.61.255.255"),
+				}, {
+					ASNumber: 4,
+					StartIP:  netip.MustParseAddr("1.70.0.0"),
+					EndIP:    netip.MustParseAddr("4.255.255.255"),
+				}, {
+					ASNumber: 5,
+					StartIP:  netip.MustParseAddr("5.0.0.0"),
+					EndIP:    netip.MustParseAddr("5.255.255.255"),
+				}}),
+			lookups: []subtest{
+				{
+					name:    "first",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  3,
+					wantASN: []int{4, 3, 3, 2, 2, 1, 1},
+				}, {
+					name:    "second",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  2,
+					wantASN: []int{4, 3, 3},
+				}, {
+					name:    "third",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  1,
+					wantASN: []int{4, 3},
+				}, {
+					name:    "fourth",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  0,
+					wantASN: []int{4},
+				}, {
+					name:    "last",
+					ip:      netip.MustParseAddr("5.5.0.0"),
+					search:  1,
+					wantASN: []int{5},
+				},
+			},
+		}, {
+			name: "overlapping 2",
+			r: NewRegistry([]AS{
+				{
+					ASNumber: 100,
+					StartIP:  netip.MustParseAddr("0.1.0.0"),
+					EndIP:    netip.MustParseAddr("0.1.255.255"),
+				}, {
+					ASNumber: 1,
+					StartIP:  netip.MustParseAddr("1.0.0.0"),
+					EndIP:    netip.MustParseAddr("1.255.255.255"),
+				}, {
+					ASNumber: 1,
+					StartIP:  netip.MustParseAddr("1.5.0.0"),
+					EndIP:    netip.MustParseAddr("1.255.255.255"),
+				}, {
+					ASNumber: 2,
+					StartIP:  netip.MustParseAddr("1.30.0.0"),
+					EndIP:    netip.MustParseAddr("2.255.255.255"),
+				}, {
+					ASNumber: 2,
+					StartIP:  netip.MustParseAddr("1.50.0.0"),
+					EndIP:    netip.MustParseAddr("2.255.255.255"),
+				}, {
+					ASNumber: 100,
+					StartIP:  netip.MustParseAddr("1.52.0.0"),
+					EndIP:    netip.MustParseAddr("1.50.255.255"),
+				}, {
+					ASNumber: 3,
+					StartIP:  netip.MustParseAddr("1.54.0.0"),
+					EndIP:    netip.MustParseAddr("3.255.255.255"),
+				}, {
+					ASNumber: 100,
+					StartIP:  netip.MustParseAddr("1.56.0.0"),
+					EndIP:    netip.MustParseAddr("1.61.255.255"),
+				}, {
+					ASNumber: 4,
+					StartIP:  netip.MustParseAddr("1.58.0.0"),
+					EndIP:    netip.MustParseAddr("4.255.255.255"),
+				}, {
+					ASNumber: 5,
+					StartIP:  netip.MustParseAddr("1.60.0.0"),
+					EndIP:    netip.MustParseAddr("5.0.255.255"),
+				}, {
+					ASNumber: 5,
+					StartIP:  netip.MustParseAddr("1.64.0.0"),
+					EndIP:    netip.MustParseAddr("5.255.255.255"),
+				}, {
+					ASNumber: 100,
+					StartIP:  netip.MustParseAddr("1.66.0.0"),
+					EndIP:    netip.MustParseAddr("1.65.255.255"),
+				}, {
+					ASNumber: 6,
+					StartIP:  netip.MustParseAddr("1.68.0.0"),
+					EndIP:    netip.MustParseAddr("6.255.255.255"),
+				}, {
+					ASNumber: 7,
+					StartIP:  netip.MustParseAddr("1.69.0.0"),
+					EndIP:    netip.MustParseAddr("7.255.255.255"),
+				}, {
+					ASNumber: 100,
+					StartIP:  netip.MustParseAddr("1.69.5.0"),
+					EndIP:    netip.MustParseAddr("1.69.255.255"),
+				}, {
+					ASNumber: 8,
+					StartIP:  netip.MustParseAddr("1.70.0.0"),
+					EndIP:    netip.MustParseAddr("8.255.255.255"),
+				}, {
+					ASNumber: 9,
+					StartIP:  netip.MustParseAddr("1.79.0.0"),
+					EndIP:    netip.MustParseAddr("9.255.255.255"),
+				}, {
+					ASNumber: 10,
+					StartIP:  netip.MustParseAddr("1.80.0.0"),
+					EndIP:    netip.MustParseAddr("10.255.255.255"),
+				}, {
+					ASNumber: 11,
+					StartIP:  netip.MustParseAddr("1.80.0.1"),
+					EndIP:    netip.MustParseAddr("11.255.255.255"),
+				},
+			},
+			),
+			lookups: []subtest{
+				{
+					name:    "zero",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  0,
+					wantASN: []int{10, 9, 8},
+				}, {
+					name:    "one",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  1,
+					wantASN: []int{10, 9, 8, 7, 6},
+				}, {
+					name:    "two",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  2,
+					wantASN: []int{10, 9, 8, 7, 6, 5, 5, 4},
+				}, {
+					name:    "three",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  3,
+					wantASN: []int{10, 9, 8, 7, 6, 5, 5, 4, 3},
+				}, {
+					name:    "four",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  4,
+					wantASN: []int{10, 9, 8, 7, 6, 5, 5, 4, 3, 2, 2, 1, 1},
+				}, {
+					name:    "five",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  5,
+					wantASN: []int{10, 9, 8, 7, 6, 5, 5, 4, 3, 2, 2, 1, 1},
+				}, {
+					name:    "ten",
+					ip:      netip.MustParseAddr("1.80.0.0"),
+					search:  10,
+					wantASN: []int{10, 9, 8, 7, 6, 5, 5, 4, 3, 2, 2, 1, 1},
+				}, {
+					name:    "last",
+					ip:      netip.MustParseAddr("10.0.0.0"),
+					search:  0,
+					wantASN: []int{11, 10},
+				}, {
+					name:    "5-1",
+					ip:      netip.MustParseAddr("1.64.0.0"),
+					search:  2,
+					wantASN: []int{5, 5, 4, 3, 2, 2, 1, 1},
+				},
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := tc.r
+			for _, tt := range tc.lookups {
+				t.Run(tt.name, func(t *testing.T) {
+					gotASList := r.MultiLookup(tt.ip, tt.search)
+					col := make([]int, 0, len(gotASList))
+					if len(gotASList) != len(tt.wantASN) {
+						t.Errorf("Registry.MultiLookup() length = %v, want %v", len(gotASList), len(tt.wantASN))
+					}
+
+					for i, as := range gotASList {
+						if !as.Contains(tt.ip) {
+							t.Errorf("Registry.MultiLookup()[%d] does not actually contain %v", i, tt.ip)
+						}
+					}
+
+					if tt.wantASN != nil {
+						for i, as := range gotASList {
+							col = append(col, as.ASNumber)
+							if i >= len(tt.wantASN) {
+								t.Errorf("Registry.MultiLookup()[%d] = %v, but is not wanted", i, as.ASNumber)
+								continue
+							}
+							if as.ASNumber != tt.wantASN[i] {
+								t.Errorf("Registry.MultiLookup()[%d] = %v, want %v", i, as.ASNumber, tt.wantASN[i])
+							}
+						}
+						if t.Failed() {
+							t.Logf("Registry.MultiLookup() = %v, want %v", col, tt.wantASN)
+						}
 					}
 				})
 			}
