@@ -36,14 +36,8 @@ type Registry struct {
 //Bool indicates if AS is valid and found
 //Notice: if multiple zones claims an IP, the closest AS zone gets returned.
 func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
-	index := sort.Search(len(r.s),
-		//this function should not be moved into a method
-		//otherwise heap allocations will be made
-		func(i int) bool {
-			return ip.Less(r.s[i].StartIP)
-		})
-	//index will always be offset by +1 due to our sorting method, so we need to subtract 1
-	index--
+	//get an index
+	index := r.getIndex(ip)
 	//when the index is negative its bellow our lower bound
 	if index < 0 {
 		return AS{}, false
@@ -73,10 +67,7 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 //MultiLookup attempts to find and return neighbouring AS that contain given ip address.
 func (r *Registry) MultiLookup(ip netip.Addr, search uint) []AS {
 	//get an index
-	index := sort.Search(len(r.s),
-		func(i int) bool {
-			return ip.Less(r.s[i].StartIP)
-		})
+	index := r.getIndex(ip)
 	//create a slice of AS
 	var s []AS
 	//remove offset
@@ -100,6 +91,18 @@ func (r *Registry) MultiLookup(ip netip.Addr, search uint) []AS {
 	}
 
 	return s
+}
+
+// getIndex returns an index closest to AS zone for a given IP address.
+func (r *Registry) getIndex(ip netip.Addr) int {
+	//we use sort.Search to find the closest index, using the AS zone's StartIP as comparison
+	index := sort.Search(len(r.s),
+		func(i int) bool {
+			return ip.Less(r.s[i].StartIP)
+		})
+	//index is actually off by one, so we decrement it
+	index--
+	return index
 }
 
 //ListZone returns a list of AS zones controlled by given asn.
