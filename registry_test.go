@@ -590,6 +590,74 @@ func TestRegistry_MultiLookup(t *testing.T) {
 	}
 }
 
+func TestRegistry_GetIndex(t *testing.T) {
+	reg1 := NewRegistry([]AS{
+		{ASNumber: 0, StartIP: netip.MustParseAddr("1.1.0.0"), EndIP: netip.MustParseAddr("1.1.255.255")},
+		{ASNumber: 1, StartIP: netip.MustParseAddr("1.2.0.0"), EndIP: netip.MustParseAddr("1.2.255.255")},
+		{ASNumber: 2, StartIP: netip.MustParseAddr("1.3.0.0"), EndIP: netip.MustParseAddr("1.3.255.255")},
+	})
+	reg2 := NewRegistry([]AS{
+		{StartIP: netip.MustParseAddr("0.0.0.5"), EndIP: netip.MustParseAddr("1.0.0.0"), ASNumber: 0},
+		{StartIP: netip.MustParseAddr("1.0.0.1"), EndIP: netip.MustParseAddr("1.0.0.1"), ASNumber: 1},
+		{StartIP: netip.MustParseAddr("1.0.0.2"), EndIP: netip.MustParseAddr("1.0.0.2"), ASNumber: 2},
+		{StartIP: netip.MustParseAddr("1.0.0.3"), EndIP: netip.MustParseAddr("1.0.0.3"), ASNumber: 3},
+		{StartIP: netip.MustParseAddr("1.0.0.4"), EndIP: netip.MustParseAddr("1.0.0.4"), ASNumber: 4},
+		{StartIP: netip.MustParseAddr("1.0.0.5"), EndIP: netip.MustParseAddr("1.0.0.5"), ASNumber: 5},
+	}, WithAssumeValid())
+
+	tests := []struct {
+		name string
+		r    *Registry
+		ip   netip.Addr
+		want int
+	}{
+		{name: "-1", r: reg1, ip: netip.MustParseAddr("0.0.0.0"), want: -1},
+		{name: "-1", r: reg1, ip: netip.MustParseAddr("0.1.0.0"), want: -1},
+		{name: "0", r: reg1, ip: netip.MustParseAddr("1.1.0.0"), want: 0},
+		{name: "0-2", r: reg1, ip: netip.MustParseAddr("1.1.1.1"), want: 0},
+		{name: "0-2", r: reg1, ip: netip.MustParseAddr("1.1.255.255"), want: 0},
+		{name: "1", r: reg1, ip: netip.MustParseAddr("1.2.0.0"), want: 1},
+		{name: "1-2", r: reg1, ip: netip.MustParseAddr("1.2.10.0"), want: 1},
+		{name: "1-3", r: reg1, ip: netip.MustParseAddr("1.2.255.255"), want: 1},
+		{name: "2-1", r: reg1, ip: netip.MustParseAddr("1.3.0.0"), want: 2},
+		{name: "2-2", r: reg1, ip: netip.MustParseAddr("1.3.0.5"), want: 2},
+		{name: "2-3", r: reg1, ip: netip.MustParseAddr("1.3.255.255"), want: 2},
+		{name: "+2", r: reg1, ip: netip.MustParseAddr("1.4.255.255"), want: 2},
+
+		{name: "p-1", r: reg2, ip: netip.MustParseAddr("0.0.0.1"), want: -1},
+		{name: "p0", r: reg2, ip: netip.MustParseAddr("0.5.5.5"), want: 0},
+		{name: "p1", r: reg2, ip: netip.MustParseAddr("1.0.0.1"), want: 1},
+		{name: "p2", r: reg2, ip: netip.MustParseAddr("1.0.0.2"), want: 2},
+		{name: "p2", r: reg2, ip: netip.MustParseAddr("1.0.0.3"), want: 3},
+		{name: "p2", r: reg2, ip: netip.MustParseAddr("1.0.0.4"), want: 4},
+		{name: "p2", r: reg2, ip: netip.MustParseAddr("1.0.0.5"), want: 5},
+		{name: "p2", r: reg2, ip: netip.MustParseAddr("1.0.0.6"), want: 5},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.r.getIndex(tt.ip); got != tt.want {
+				t.Errorf("Registry.GetIndex(%v) = %v, want %v", tt.ip, got, tt.want)
+				const offset = 3
+				start := got - offset
+				if start < 0 {
+					start = 0
+				}
+				for i := start; i < got+offset+1; i++ {
+					s := " "
+					switch i {
+					case got:
+						s = ">"
+					case tt.want:
+						s = "*"
+					}
+
+					t.Logf("%ss[%d] = %v", s, i, tt.r.s[i].StartIP)
+				}
+			}
+		})
+	}
+}
+
 func TestRegistry_Integration(t *testing.T) {
 	ASNs := []AS{
 		{
