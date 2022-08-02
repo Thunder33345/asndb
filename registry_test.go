@@ -241,6 +241,54 @@ func TestRegistry_Lookup(t *testing.T) {
 					wantASN: 3,
 				},
 			},
+		}, {
+			name: "precise list",
+			r: NewRegistry([]AS{
+				{
+					StartIP:  netip.MustParseAddr("1.0.0.1"),
+					EndIP:    netip.MustParseAddr("1.0.0.1"),
+					ASNumber: 1,
+				}, {
+					StartIP:  netip.MustParseAddr("1.0.0.2"),
+					EndIP:    netip.MustParseAddr("1.0.0.2"),
+					ASNumber: 2,
+				}, {
+					StartIP:  netip.MustParseAddr("1.0.0.3"),
+					EndIP:    netip.MustParseAddr("1.0.0.3"),
+					ASNumber: 3,
+				}, {
+					StartIP:  netip.MustParseAddr("1.0.0.4"),
+					EndIP:    netip.MustParseAddr("1.0.0.4"),
+					ASNumber: 4,
+				}, {
+					StartIP:  netip.MustParseAddr("1.0.0.5"),
+					EndIP:    netip.MustParseAddr("1.0.0.5"),
+					ASNumber: 5,
+				},
+			}, WithAssumeValid()),
+			lookups: []subtest{
+				{
+					name:    "1",
+					ip:      netip.MustParseAddr("1.0.0.1"),
+					wantASN: 1,
+				}, {
+					name:    "2",
+					ip:      netip.MustParseAddr("1.0.0.2"),
+					wantASN: 2,
+				}, {
+					name:    "3",
+					ip:      netip.MustParseAddr("1.0.0.3"),
+					wantASN: 3,
+				}, {
+					name:    "4",
+					ip:      netip.MustParseAddr("1.0.0.4"),
+					wantASN: 4,
+				}, {
+					name:    "5",
+					ip:      netip.MustParseAddr("1.0.0.5"),
+					wantASN: 5,
+				},
+			},
 		},
 	}
 	for _, tc := range tests {
