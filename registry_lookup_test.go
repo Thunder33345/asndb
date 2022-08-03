@@ -18,7 +18,8 @@ func loadDB() {
 	if err != nil {
 		panic(err)
 	}
-	list, err = LoadFromTSV(f)
+	s, err := LoadFromTSV(f)
+	list = NewRegistry(s)
 	if err != nil {
 		panic(err)
 	}

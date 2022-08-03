@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func LoadFromTSV(reader io.Reader) (*Registry, error) {
+func LoadFromTSV(reader io.Reader) ([]AS, error) {
 	var s []AS
 	buf := bufio.NewScanner(reader)
 	for buf.Scan() {
@@ -31,5 +31,5 @@ func LoadFromTSV(reader io.Reader) (*Registry, error) {
 			ASDescription: parts[4],
 		})
 	}
-	return NewRegistry(s), nil
+	return s, nil
 }
