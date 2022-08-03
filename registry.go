@@ -5,14 +5,14 @@ import (
 	"sort"
 )
 
-// NewRegistry creates a new registry from the given list of AS zones.
+// NewASList creates a new registry from the given list of AS zones.
 // The given slice will be cloned and sorted by StartIP.
-func NewRegistry(s []AS, opts ...Option) *Registry {
+func NewASList(s []AS, opts ...Option) *ASList {
 	s = clone(s)
 	sort.Sort(asSortIP(s))
 	s = s[:len(s):len(s)]
 
-	r := &Registry{s: s}
+	r := &ASList{s: s}
 	for _, opt := range opts {
 		opt(r)
 	}
@@ -20,8 +20,8 @@ func NewRegistry(s []AS, opts ...Option) *Registry {
 	return r
 }
 
-// Registry holds a list of AS zones.
-type Registry struct {
+// ASList holds a list of AS zones.
+type ASList struct {
 	s           []AS
 	assumeValid bool
 }
@@ -29,7 +29,7 @@ type Registry struct {
 // Find finds and returns the AS zone for a given IP address.
 // Bool indicates if AS is valid and found
 // Notice: if multiple zones claims an IP, the closest AS zone gets returned.
-func (r *Registry) Find(ip netip.Addr) (AS, bool) {
+func (r *ASList) Find(ip netip.Addr) (AS, bool) {
 	//get an index
 	index := r.getIndex(ip)
 	//when the index is negative its bellow our lower bound
@@ -59,7 +59,7 @@ func (r *Registry) Find(ip netip.Addr) (AS, bool) {
 }
 
 // FindList attempts to find and return neighbouring AS that contain given ip address.
-func (r *Registry) FindList(ip netip.Addr, search uint) []AS {
+func (r *ASList) FindList(ip netip.Addr, search uint) []AS {
 	//get an index
 	index := r.getIndex(ip)
 	//create a slice of AS
@@ -86,7 +86,7 @@ func (r *Registry) FindList(ip netip.Addr, search uint) []AS {
 }
 
 // getIndex returns an index closest to AS zone for a given IP address.
-func (r *Registry) getIndex(ip netip.Addr) int {
+func (r *ASList) getIndex(ip netip.Addr) int {
 	//we use sort.Search to find the closest index, using the AS zone's StartIP as comparison
 	index := sort.Search(len(r.s),
 		func(i int) bool {

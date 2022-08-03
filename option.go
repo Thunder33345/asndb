@@ -1,9 +1,9 @@
 package asndb
 
-type Option func(r *Registry)
+type Option func(r *ASList)
 
 func WithAssumeValid() Option {
-	return func(r *Registry) {
+	return func(r *ASList) {
 		r.assumeValid = true
 	}
 }

@@ -57,7 +57,7 @@ func TestNewRegistry(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewRegistry(tt.asn)
+			got := NewASList(tt.asn)
 			var asl []int
 			for i, want := range tt.wantASN {
 				gotAsn := got.s[i].ASNumber
@@ -88,14 +88,14 @@ func TestRegistry_Find(t *testing.T) {
 	}
 	tests := []struct {
 		name          string
-		r             *Registry
+		r             *ASList
 		assumeCorrect bool
 		lookups       []subtest
 	}{
 		{
 			//this is a simple gap less lookup, checks for upper and lower bounds
 			name: "simple lookup",
-			r: NewRegistry([]AS{
+			r: NewASList([]AS{
 				{
 					StartIP:  netip.MustParseAddr("1.0.0.0"),
 					EndIP:    netip.MustParseAddr("1.255.255.255"),
@@ -154,7 +154,7 @@ func TestRegistry_Find(t *testing.T) {
 		}, {
 			//this is a gap-ed lookup, checks for midpoint
 			name: "gap test",
-			r: NewRegistry([]AS{
+			r: NewASList([]AS{
 				{
 					StartIP:  netip.MustParseAddr("1.0.0.0"),
 					EndIP:    netip.MustParseAddr("1.255.255.255"),
@@ -196,7 +196,7 @@ func TestRegistry_Find(t *testing.T) {
 		}, {
 			//this check midpoint but checks if assumptions is correct
 			name: "assume valid gap test",
-			r: NewRegistry([]AS{
+			r: NewASList([]AS{
 				{
 					StartIP:  netip.MustParseAddr("1.0.0.0"),
 					EndIP:    netip.MustParseAddr("1.255.255.255"),
@@ -237,7 +237,7 @@ func TestRegistry_Find(t *testing.T) {
 			},
 		}, {
 			name: "precise list",
-			r: NewRegistry([]AS{
+			r: NewASList([]AS{
 				{
 					StartIP:  netip.MustParseAddr("1.0.0.1"),
 					EndIP:    netip.MustParseAddr("1.0.0.1"),
@@ -293,31 +293,31 @@ func TestRegistry_Find(t *testing.T) {
 					gotAS, gotFound := r.Find(tt.ip)
 					if tt.wantEmpty {
 						if gotFound {
-							t.Errorf("Registry.Find() Found = %v, want false", gotFound)
+							t.Errorf("ASList.Find() Found = %v, want false", gotFound)
 						}
 						if gotAS != (AS{}) {
-							t.Errorf("Registry.Find() AS = %v, want empty", gotAS)
+							t.Errorf("ASList.Find() AS = %v, want empty", gotAS)
 						}
 					}
 
 					if (!tt.wantEmpty) != gotFound {
-						t.Errorf("Registry.Find() Found = %v, want %t", gotFound, !tt.wantEmpty)
+						t.Errorf("ASList.Find() Found = %v, want %t", gotFound, !tt.wantEmpty)
 					}
 					if gotAS.ASNumber != tt.wantASN {
-						t.Errorf("Registry.Find() ASN = %v, want %v", gotAS.ASNumber, tt.wantASN)
+						t.Errorf("ASList.Find() ASN = %v, want %v", gotAS.ASNumber, tt.wantASN)
 					}
 					if tt.wantAS.StartIP.IsValid() && tt.wantAS.EndIP.IsValid() {
 						if !reflect.DeepEqual(gotAS, tt.wantAS) {
-							t.Errorf("Registry.Find() AS = %v, want %v", gotAS, tt.wantAS)
+							t.Errorf("ASList.Find() AS = %v, want %v", gotAS, tt.wantAS)
 						}
 					}
 					if tc.assumeCorrect == false && !tt.wantEmpty {
 						if gotAS.Contains(tt.ip) == false {
-							t.Errorf("Registry.Find() AS does not actually contain %v", tt.ip)
+							t.Errorf("ASList.Find() AS does not actually contain %v", tt.ip)
 						}
 					}
 					if t.Failed() {
-						t.Logf("Registry.Find() AS = %v, Found = %v, ASN = %d", gotAS, gotFound, gotAS.ASNumber)
+						t.Logf("ASList.Find() AS = %v, Found = %v, ASN = %d", gotAS, gotFound, gotAS.ASNumber)
 					}
 				})
 			}
@@ -335,12 +335,12 @@ func TestRegistry_FindList(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		r       *Registry
+		r       *ASList
 		lookups []subtest
 	}{
 		{
 			name: "overlapping 1",
-			r: NewRegistry([]AS{
+			r: NewASList([]AS{
 				{
 					ASNumber: 1,
 					StartIP:  netip.MustParseAddr("1.0.0.0"),
@@ -416,7 +416,7 @@ func TestRegistry_FindList(t *testing.T) {
 			},
 		}, {
 			name: "overlapping 2",
-			r: NewRegistry([]AS{
+			r: NewASList([]AS{
 				{
 					ASNumber: 100,
 					StartIP:  netip.MustParseAddr("0.1.0.0"),
@@ -554,12 +554,12 @@ func TestRegistry_FindList(t *testing.T) {
 					gotASList := r.FindList(tt.ip, tt.search)
 					col := make([]int, 0, len(gotASList))
 					if len(gotASList) != len(tt.wantASN) {
-						t.Errorf("Registry.FindList() length = %v, want %v", len(gotASList), len(tt.wantASN))
+						t.Errorf("ASList.FindList() length = %v, want %v", len(gotASList), len(tt.wantASN))
 					}
 
 					for i, as := range gotASList {
 						if !as.Contains(tt.ip) {
-							t.Errorf("Registry.FindList()[%d] does not actually contain %v", i, tt.ip)
+							t.Errorf("ASList.FindList()[%d] does not actually contain %v", i, tt.ip)
 						}
 					}
 
@@ -567,15 +567,15 @@ func TestRegistry_FindList(t *testing.T) {
 						for i, as := range gotASList {
 							col = append(col, as.ASNumber)
 							if i >= len(tt.wantASN) {
-								t.Errorf("Registry.FindList()[%d] = %v, but is not wanted", i, as.ASNumber)
+								t.Errorf("ASList.FindList()[%d] = %v, but is not wanted", i, as.ASNumber)
 								continue
 							}
 							if as.ASNumber != tt.wantASN[i] {
-								t.Errorf("Registry.FindList()[%d] = %v, want %v", i, as.ASNumber, tt.wantASN[i])
+								t.Errorf("ASList.FindList()[%d] = %v, want %v", i, as.ASNumber, tt.wantASN[i])
 							}
 						}
 						if t.Failed() {
-							t.Logf("Registry.FindList() = %v, want %v", col, tt.wantASN)
+							t.Logf("ASList.FindList() = %v, want %v", col, tt.wantASN)
 						}
 					}
 				})
@@ -585,12 +585,12 @@ func TestRegistry_FindList(t *testing.T) {
 }
 
 func TestRegistry_GetIndex(t *testing.T) {
-	reg1 := NewRegistry([]AS{
+	reg1 := NewASList([]AS{
 		{ASNumber: 0, StartIP: netip.MustParseAddr("1.1.0.0"), EndIP: netip.MustParseAddr("1.1.255.255")},
 		{ASNumber: 1, StartIP: netip.MustParseAddr("1.2.0.0"), EndIP: netip.MustParseAddr("1.2.255.255")},
 		{ASNumber: 2, StartIP: netip.MustParseAddr("1.3.0.0"), EndIP: netip.MustParseAddr("1.3.255.255")},
 	})
-	reg2 := NewRegistry([]AS{
+	reg2 := NewASList([]AS{
 		{StartIP: netip.MustParseAddr("0.0.0.5"), EndIP: netip.MustParseAddr("1.0.0.0"), ASNumber: 0},
 		{StartIP: netip.MustParseAddr("1.0.0.1"), EndIP: netip.MustParseAddr("1.0.0.1"), ASNumber: 1},
 		{StartIP: netip.MustParseAddr("1.0.0.2"), EndIP: netip.MustParseAddr("1.0.0.2"), ASNumber: 2},
@@ -601,7 +601,7 @@ func TestRegistry_GetIndex(t *testing.T) {
 
 	tests := []struct {
 		name string
-		r    *Registry
+		r    *ASList
 		ip   netip.Addr
 		want int
 	}{
@@ -630,7 +630,7 @@ func TestRegistry_GetIndex(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.r.getIndex(tt.ip); got != tt.want {
-				t.Errorf("Registry.GetIndex(%v) = %v, want %v", tt.ip, got, tt.want)
+				t.Errorf("ASList.GetIndex(%v) = %v, want %v", tt.ip, got, tt.want)
 				const offset = 3
 				start := got - offset
 				if start < 0 {
@@ -691,7 +691,7 @@ func TestRegistry_Integration(t *testing.T) {
 			ASNumber: 2,
 		},
 	}
-	r := NewRegistry(ASNs)
+	r := NewASList(ASNs)
 	wantASNOrder := []int{0, 1, 2, 3, 2, 2, 4}
 	wantZoneLen := 7
 

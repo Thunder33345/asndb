@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var list *Registry
+var list *ASList
 
 func loadDB() {
 	if list != nil {
@@ -19,7 +19,7 @@ func loadDB() {
 		panic(err)
 	}
 	s, err := LoadFromTSV(f)
-	list = NewRegistry(s)
+	list = NewASList(s)
 	if err != nil {
 		panic(err)
 	}

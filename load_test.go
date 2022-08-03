@@ -19,7 +19,7 @@ func TestDownloadIntegration(t *testing.T) {
 		t.Errorf("LoadFromTSV() error = %v", err)
 		return
 	}
-	reg := NewRegistry(ls)
+	reg := NewASList(ls)
 	as, found := reg.Find(netip.MustParseAddr("1.1.1.1"))
 	if found == false || as.ASNumber != 13335 {
 		t.Errorf("Find() = AS %v Found %t, want 13335, true", as.ASNumber, found)
