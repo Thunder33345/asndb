@@ -59,6 +59,8 @@ func (r *ASList) Find(ip netip.Addr) (AS, bool) {
 }
 
 // FindList attempts to find and return neighbouring AS that contain given ip address.
+// search dictate how many invalid AS zones to skip before returning.
+// This method is only useful when an IP has been claimed by multiple AS zones.
 func (r *ASList) FindList(ip netip.Addr, search uint) []AS {
 	//get an index
 	index := r.getIndex(ip)
