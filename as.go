@@ -42,17 +42,3 @@ func (a asSortIP) Less(i, j int) bool {
 func (a asSortIP) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
-
-type asSortASN []AS
-
-func (a asSortASN) Len() int {
-	return len(a)
-}
-
-func (a asSortASN) Less(i, j int) bool {
-	return a[i].ASNumber < a[j].ASNumber
-}
-
-func (a asSortASN) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}

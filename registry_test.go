@@ -13,7 +13,6 @@ func TestNewRegistry(t *testing.T) {
 		asn         []AS
 		wantASN     []int
 		wantZoneLen int
-		wantASNLen  int
 	}{
 		{
 			name: "test sort",
@@ -54,7 +53,6 @@ func TestNewRegistry(t *testing.T) {
 			},
 			wantASN:     []int{0, 1, 2, 3, 2, 2, 4},
 			wantZoneLen: 7,
-			wantASNLen:  5,
 		},
 	}
 	for _, tt := range tests {
@@ -75,10 +73,6 @@ func TestNewRegistry(t *testing.T) {
 			gotZoneLen := len(got.s)
 			if gotZoneLen != tt.wantZoneLen {
 				t.Errorf("ASN.ZoneLen() = %v, want %v", gotZoneLen, tt.wantZoneLen)
-			}
-			gotASNLen := len(got.m)
-			if gotASNLen != tt.wantASNLen {
-				t.Errorf("ASN.ASLen() = %v, want %v", gotASNLen, tt.wantASNLen)
 			}
 		})
 	}
@@ -700,30 +694,7 @@ func TestRegistry_Integration(t *testing.T) {
 	r := NewRegistry(ASNs)
 	wantASNOrder := []int{0, 1, 2, 3, 2, 2, 4}
 	wantZoneLen := 7
-	wantASNLen := 5
-	wantASList := []struct {
-		asn       int
-		wantCount int
-		wantFound bool
-	}{
-		{
-			asn:       10,
-			wantFound: false,
-		},
-		{
-			asn:       0,
-			wantCount: 1,
-			wantFound: true,
-		}, {
-			asn:       2,
-			wantCount: 3,
-			wantFound: true,
-		}, {
-			asn:       4,
-			wantCount: 1,
-			wantFound: true,
-		},
-	}
+
 	wantLookup := []struct {
 		ip      netip.Addr
 		wantASN int
@@ -743,23 +714,6 @@ func TestRegistry_Integration(t *testing.T) {
 		}, {
 			ip:      netip.MustParseAddr("200.0.0.0"),
 			wantASN: -1,
-		},
-	}
-	wantASNList := []AS{
-		{
-			ASNumber:      0,
-			ASDescription: "the 0th asn",
-			CountryCode:   "nil",
-		},
-		{
-			ASNumber: 1,
-		}, {
-			ASNumber: 2,
-		}, {
-			ASNumber: 3,
-		}, {
-			ASNumber:      4,
-			ASDescription: "the 4th asn",
 		},
 	}
 
@@ -798,40 +752,6 @@ func TestRegistry_Integration(t *testing.T) {
 		}
 	})
 
-	t.Run("ASNLen", func(t *testing.T) {
-		gotASNLen := len(r.m)
-		if gotASNLen != wantASNLen {
-			t.Errorf("ASN.ASLen() = %v, want %v", gotASNLen, wantASNLen)
-		}
-	})
-
-	t.Run("ASList", func(t *testing.T) {
-		for _, tt := range wantASList {
-			gotASNs, gotFound := r.ListZone(tt.asn)
-			if gotFound != tt.wantFound {
-				t.Errorf("ASN.ASList() found = %v, want %v", gotFound, tt.wantFound)
-			}
-			if tt.wantFound == false {
-				continue
-			}
-			if len(gotASNs) != tt.wantCount {
-				t.Errorf("ASN.ASList() count = %v, want %v", gotASNs, tt.wantCount)
-			}
-		}
-	})
-
-	t.Run("ASList Alter", func(t *testing.T) {
-		l, f := r.ListZone(0)
-		if !f {
-			t.Errorf("ASN.ListZone(0) should exist, but none found")
-		}
-		l[0].ASNumber = 10
-		l2, _ := r.ListZone(0)
-		if l2[0].ASNumber != 0 {
-			t.Errorf("results of ASN.ListZone() should not be altered")
-		}
-	})
-
 	t.Run("Lookup", func(t *testing.T) {
 		for _, s := range wantLookup {
 			a, b := r.Lookup(s.ip)
@@ -850,15 +770,6 @@ func TestRegistry_Integration(t *testing.T) {
 				if b != true {
 					t.Errorf("ASN.Lookup(%v) b = %v, want true", s.ip, b)
 				}
-			}
-		}
-	})
-
-	t.Run("ListASN", func(t *testing.T) {
-		l := r.ListASN()
-		for i, as := range wantASNList {
-			if l[i] != as {
-				t.Errorf("ASN.ListASN()[%d] = %v, want %v", i, l[i].ASNumber, as.ASNumber)
 			}
 		}
 	})
