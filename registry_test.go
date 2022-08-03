@@ -78,7 +78,7 @@ func TestNewRegistry(t *testing.T) {
 	}
 }
 
-func TestRegistry_Lookup(t *testing.T) {
+func TestRegistry_Find(t *testing.T) {
 	type subtest struct {
 		name      string
 		ip        netip.Addr
@@ -290,34 +290,34 @@ func TestRegistry_Lookup(t *testing.T) {
 			r := tc.r
 			for _, tt := range tc.lookups {
 				t.Run(tt.name, func(t *testing.T) {
-					gotAS, gotFound := r.Lookup(tt.ip)
+					gotAS, gotFound := r.Find(tt.ip)
 					if tt.wantEmpty {
 						if gotFound {
-							t.Errorf("Registry.Lookup() Found = %v, want false", gotFound)
+							t.Errorf("Registry.Find() Found = %v, want false", gotFound)
 						}
 						if gotAS != (AS{}) {
-							t.Errorf("Registry.Lookup() AS = %v, want empty", gotAS)
+							t.Errorf("Registry.Find() AS = %v, want empty", gotAS)
 						}
 					}
 
 					if (!tt.wantEmpty) != gotFound {
-						t.Errorf("Registry.Lookup() Found = %v, want %t", gotFound, !tt.wantEmpty)
+						t.Errorf("Registry.Find() Found = %v, want %t", gotFound, !tt.wantEmpty)
 					}
 					if gotAS.ASNumber != tt.wantASN {
-						t.Errorf("Registry.Lookup() ASN = %v, want %v", gotAS.ASNumber, tt.wantASN)
+						t.Errorf("Registry.Find() ASN = %v, want %v", gotAS.ASNumber, tt.wantASN)
 					}
 					if tt.wantAS.StartIP.IsValid() && tt.wantAS.EndIP.IsValid() {
 						if !reflect.DeepEqual(gotAS, tt.wantAS) {
-							t.Errorf("Registry.Lookup() AS = %v, want %v", gotAS, tt.wantAS)
+							t.Errorf("Registry.Find() AS = %v, want %v", gotAS, tt.wantAS)
 						}
 					}
 					if tc.assumeCorrect == false && !tt.wantEmpty {
 						if gotAS.Contains(tt.ip) == false {
-							t.Errorf("Registry.Lookup() AS does not actually contain %v", tt.ip)
+							t.Errorf("Registry.Find() AS does not actually contain %v", tt.ip)
 						}
 					}
 					if t.Failed() {
-						t.Logf("Registry.Lookup() AS = %v, Found = %v, ASN = %d", gotAS, gotFound, gotAS.ASNumber)
+						t.Logf("Registry.Find() AS = %v, Found = %v, ASN = %d", gotAS, gotFound, gotAS.ASNumber)
 					}
 				})
 			}
@@ -325,7 +325,7 @@ func TestRegistry_Lookup(t *testing.T) {
 	}
 }
 
-func TestRegistry_MultiLookup(t *testing.T) {
+func TestRegistry_FindList(t *testing.T) {
 	type subtest struct {
 		name    string
 		ip      netip.Addr
@@ -551,15 +551,15 @@ func TestRegistry_MultiLookup(t *testing.T) {
 			r := tc.r
 			for _, tt := range tc.lookups {
 				t.Run(tt.name, func(t *testing.T) {
-					gotASList := r.MultiLookup(tt.ip, tt.search)
+					gotASList := r.FindList(tt.ip, tt.search)
 					col := make([]int, 0, len(gotASList))
 					if len(gotASList) != len(tt.wantASN) {
-						t.Errorf("Registry.MultiLookup() length = %v, want %v", len(gotASList), len(tt.wantASN))
+						t.Errorf("Registry.FindList() length = %v, want %v", len(gotASList), len(tt.wantASN))
 					}
 
 					for i, as := range gotASList {
 						if !as.Contains(tt.ip) {
-							t.Errorf("Registry.MultiLookup()[%d] does not actually contain %v", i, tt.ip)
+							t.Errorf("Registry.FindList()[%d] does not actually contain %v", i, tt.ip)
 						}
 					}
 
@@ -567,15 +567,15 @@ func TestRegistry_MultiLookup(t *testing.T) {
 						for i, as := range gotASList {
 							col = append(col, as.ASNumber)
 							if i >= len(tt.wantASN) {
-								t.Errorf("Registry.MultiLookup()[%d] = %v, but is not wanted", i, as.ASNumber)
+								t.Errorf("Registry.FindList()[%d] = %v, but is not wanted", i, as.ASNumber)
 								continue
 							}
 							if as.ASNumber != tt.wantASN[i] {
-								t.Errorf("Registry.MultiLookup()[%d] = %v, want %v", i, as.ASNumber, tt.wantASN[i])
+								t.Errorf("Registry.FindList()[%d] = %v, want %v", i, as.ASNumber, tt.wantASN[i])
 							}
 						}
 						if t.Failed() {
-							t.Logf("Registry.MultiLookup() = %v, want %v", col, tt.wantASN)
+							t.Logf("Registry.FindList() = %v, want %v", col, tt.wantASN)
 						}
 					}
 				})
@@ -695,7 +695,7 @@ func TestRegistry_Integration(t *testing.T) {
 	wantASNOrder := []int{0, 1, 2, 3, 2, 2, 4}
 	wantZoneLen := 7
 
-	wantLookup := []struct {
+	wantFind := []struct {
 		ip      netip.Addr
 		wantASN int
 	}{
@@ -752,23 +752,23 @@ func TestRegistry_Integration(t *testing.T) {
 		}
 	})
 
-	t.Run("Lookup", func(t *testing.T) {
-		for _, s := range wantLookup {
-			a, b := r.Lookup(s.ip)
+	t.Run("Find", func(t *testing.T) {
+		for _, s := range wantFind {
+			a, b := r.Find(s.ip)
 			if s.wantASN == -1 {
 				d := AS{}
 				if a != d {
-					t.Errorf("ASN.Lookup(%v).ASNumber = %#v, wanted empty", s.ip, a)
+					t.Errorf("ASN.Find(%v).ASNumber = %#v, wanted empty", s.ip, a)
 				}
 				if b != false {
-					t.Errorf("ASN.Lookup(%v) b = %v, want false", s.ip, b)
+					t.Errorf("ASN.Find(%v) b = %v, want false", s.ip, b)
 				}
 			} else {
 				if a.ASNumber != s.wantASN {
-					t.Errorf("ASN.Lookup(%v).ASNumber = %v, want %v", s.ip, a.ASNumber, s.wantASN)
+					t.Errorf("ASN.Find(%v).ASNumber = %v, want %v", s.ip, a.ASNumber, s.wantASN)
 				}
 				if b != true {
-					t.Errorf("ASN.Lookup(%v) b = %v, want true", s.ip, b)
+					t.Errorf("ASN.Find(%v) b = %v, want true", s.ip, b)
 				}
 			}
 		}

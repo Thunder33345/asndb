@@ -40,7 +40,7 @@ func BenchmarkLoad(b *testing.B) {
 	}
 }
 
-func Benchmark_LookupV4(b *testing.B) {
+func Benchmark_FindV4(b *testing.B) {
 	loadDB()
 
 	type entry struct {
@@ -62,13 +62,13 @@ func Benchmark_LookupV4(b *testing.B) {
 		}
 		b.Run(name, func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
-				_, _ = list.Lookup(e.addr)
+				_, _ = list.Find(e.addr)
 			}
 		})
 	}
 }
 
-func Benchmark_LookupV6(b *testing.B) {
+func Benchmark_FindV6(b *testing.B) {
 	loadDB()
 
 	type entry struct {
@@ -90,24 +90,24 @@ func Benchmark_LookupV6(b *testing.B) {
 		}
 		b.Run(name, func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
-				_, _ = list.Lookup(e.addr)
+				_, _ = list.Find(e.addr)
 			}
 		})
 	}
 }
 
-func Benchmark_LookupSimple(b *testing.B) {
+func Benchmark_FindSimple(b *testing.B) {
 	loadDB()
 	addr := netip.MustParseAddr("1.1.1.1")
 	b.Run("1.1.1.1 cf", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
-			_, _ = list.Lookup(addr)
+			_, _ = list.Find(addr)
 		}
 	})
 	addr = netip.MustParseAddr("223.255.254.5")
 	b.Run("223.255.254.5 end range", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
-			_, _ = list.Lookup(addr)
+			_, _ = list.Find(addr)
 		}
 	})
 }

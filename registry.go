@@ -26,10 +26,10 @@ type Registry struct {
 	assumeValid bool
 }
 
-// Lookup finds and returns the AS zone for a given IP address.
+// Find finds and returns the AS zone for a given IP address.
 // Bool indicates if AS is valid and found
 // Notice: if multiple zones claims an IP, the closest AS zone gets returned.
-func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
+func (r *Registry) Find(ip netip.Addr) (AS, bool) {
 	//get an index
 	index := r.getIndex(ip)
 	//when the index is negative its bellow our lower bound
@@ -58,8 +58,8 @@ func (r *Registry) Lookup(ip netip.Addr) (AS, bool) {
 	return AS{}, false
 }
 
-// MultiLookup attempts to find and return neighbouring AS that contain given ip address.
-func (r *Registry) MultiLookup(ip netip.Addr, search uint) []AS {
+// FindList attempts to find and return neighbouring AS that contain given ip address.
+func (r *Registry) FindList(ip netip.Addr, search uint) []AS {
 	//get an index
 	index := r.getIndex(ip)
 	//create a slice of AS
