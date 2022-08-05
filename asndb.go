@@ -1,3 +1,8 @@
+// Package asndb implement asn lookup and data handling.
+// This library will handle tsv data sourced from https://iptoasn.com.
+//
+// The data can be downloaded via DownloadFromURL(DownloadViaIpToAsn), which then parsed using LoadFromTSV(),
+// that can be used to initiate a ASList or ASNMap.
 package asndb
 
 import (
@@ -41,4 +46,11 @@ func (a asSortIP) Less(i, j int) bool {
 
 func (a asSortIP) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
+}
+
+func clone[S ~[]E, E any](s S) S {
+	if s == nil {
+		return nil
+	}
+	return append(make(S, 0, len(s)), s...)
 }

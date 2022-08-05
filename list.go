@@ -99,10 +99,3 @@ func (r *ASList) FromIndex(i int) (AS, bool) {
 func (r *ASList) IndexLen() int {
 	return len(r.s)
 }
-
-func clone[S ~[]E, E any](s S) S {
-	if s == nil {
-		return nil
-	}
-	return append(make(S, 0, len(s)), s...)
-}
