@@ -7,23 +7,18 @@ import (
 
 // NewASList creates a new registry from the given list of AS zones.
 // The given slice will be cloned and sorted by StartIP.
-func NewASList(s []AS, opts ...Option) *ASList {
+func NewASList(s []AS) *ASList {
 	s = clone(s)
 	sort.Sort(asSortIP(s))
 	s = s[:len(s):len(s)]
 
 	r := &ASList{s: s}
-	for _, opt := range opts {
-		opt(r)
-	}
-
 	return r
 }
 
 // ASList holds a list of AS zones.
 type ASList struct {
-	s           []AS
-	assumeValid bool
+	s []AS
 }
 
 // Find finds and returns the AS zone for a given IP address.
@@ -37,25 +32,11 @@ func (r *ASList) Find(ip netip.Addr) (AS, bool) {
 		return AS{}, false
 	}
 
-	//when the index is equal to the length of the slice
-	//we have to manually check if the ip is part of the last AS zone
-	//or is it actually above our higher bound
-	if index >= len(r.s)-1 {
-		index = len(r.s) - 1
-		if r.s[index].Contains(ip) {
-			return r.s[index], true
-		}
+	//we check if the AS actually contains the IP
+	if !r.s[index].Contains(ip) {
 		return AS{}, false
 	}
-
-	//returns the AS if we don't care about possible inaccuracies
-	//(which will occur in a gap of unclaimed ips between AS zones)
-	//otherwise we check if it's part of the AS zone
-	if r.assumeValid || r.s[index].Contains(ip) {
-		return r.s[index], true
-	}
-
-	return AS{}, false
+	return r.s[index], true
 }
 
 // FindList attempts to find and return neighbouring AS that contain given ip address.

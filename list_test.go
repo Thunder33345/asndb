@@ -195,7 +195,7 @@ func TestRegistry_Find(t *testing.T) {
 			},
 		}, {
 			//this check midpoint but checks if assumptions is correct
-			name: "assume valid gap test",
+			name: "gap test",
 			r: NewASList([]AS{
 				{
 					StartIP:  netip.MustParseAddr("1.0.0.0"),
@@ -210,7 +210,7 @@ func TestRegistry_Find(t *testing.T) {
 					EndIP:    netip.MustParseAddr("5.255.255.255"),
 					ASNumber: 3,
 				},
-			}, WithAssumeValid()),
+			}),
 			assumeCorrect: true,
 			lookups: []subtest{
 				{
@@ -218,17 +218,17 @@ func TestRegistry_Find(t *testing.T) {
 					ip:      netip.MustParseAddr("1.1.1.1"),
 					wantASN: 1,
 				}, {
-					name:    "middle gap assume 1",
-					ip:      netip.MustParseAddr("2.2.2.2"),
-					wantASN: 1,
+					name:      "gap 1",
+					ip:        netip.MustParseAddr("2.2.2.2"),
+					wantEmpty: true,
 				}, {
 					name:    "2",
 					ip:      netip.MustParseAddr("3.0.3.3"),
 					wantASN: 2,
 				}, {
-					name:    "middle gap assume 2",
-					ip:      netip.MustParseAddr("4.2.2.2"),
-					wantASN: 2,
+					name:      "gap 2",
+					ip:        netip.MustParseAddr("4.2.2.2"),
+					wantEmpty: true,
 				}, {
 					name:    "3",
 					ip:      netip.MustParseAddr("5.0.3.3"),
@@ -259,7 +259,7 @@ func TestRegistry_Find(t *testing.T) {
 					EndIP:    netip.MustParseAddr("1.0.0.5"),
 					ASNumber: 5,
 				},
-			}, WithAssumeValid()),
+			}),
 			lookups: []subtest{
 				{
 					name:    "1",
@@ -597,7 +597,7 @@ func TestRegistry_Index(t *testing.T) {
 		{StartIP: netip.MustParseAddr("1.0.0.3"), EndIP: netip.MustParseAddr("1.0.0.3"), ASNumber: 3},
 		{StartIP: netip.MustParseAddr("1.0.0.4"), EndIP: netip.MustParseAddr("1.0.0.4"), ASNumber: 4},
 		{StartIP: netip.MustParseAddr("1.0.0.5"), EndIP: netip.MustParseAddr("1.0.0.5"), ASNumber: 5},
-	}, WithAssumeValid())
+	})
 
 	tests := []struct {
 		name string
